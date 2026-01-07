@@ -23,7 +23,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public Product createProduct(@RequestBody Product product) {
+    public Product createProduct(@RequestBody Product product) { // to bind the http request body(json) request to java object
         return productService.addProduct(product);
     }
 
