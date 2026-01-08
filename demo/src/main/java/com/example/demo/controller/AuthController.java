@@ -1,5 +1,9 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.request.LoginRequest;
+import com.example.demo.dto.request.RegisterRequest;
+import com.example.demo.dto.response.AuthResponse;
+import com.example.demo.dto.response.UserResponse;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import org.springframework.web.bind.annotation.*;
@@ -15,21 +19,23 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
-        return userService.register(user);
+    public UserResponse register(@RequestBody RegisterRequest registerRequest) {
+        User user = userService.register(registerRequest);
+        return toUserResponse(user);
     }
 
     @PostMapping("/login")
-    public User login(@RequestBody User user) {
-        User loggedInUser = userService.login(user.getEmail(), user.getPassword());
-        if (loggedInUser == null) {
-            throw new RuntimeException("invalid credential");
-        }
-        return loggedInUser;
+    public AuthResponse login(@RequestBody LoginRequest loginRequest) {
+        return userService.login(loginRequest.getEmail(), loginRequest.getPassword());
     }
 
     @GetMapping("/me")
-    public User me() {
-        return userService.getCurrentUser();
+    public UserResponse me() {
+        User user = userService.getCurrentUser();
+        return toUserResponse(user);
+    }
+
+    private UserResponse toUserResponse(User user) {
+        return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.isActive());
     }
 }
