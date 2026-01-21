@@ -223,6 +223,26 @@ public class MemberDAO {
         );
 
     }
+
+    public String generateNextMemberId() {
+        String query = "SELECT member_id FROM members ORDER BY id DESC LIMIT 1";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            if (rs.next()) {
+                String lastId = rs.getString("member_id");
+                int number = Integer.parseInt(lastId.substring(3));
+                return String.format("MEM%03d", number + 1);
+            } else {
+                return "MEM001"; // First member
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error generating member ID: " + e.getMessage(), e);
+        }
+    }
 }
 
 

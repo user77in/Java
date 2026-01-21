@@ -15,6 +15,7 @@ import { DashboardView } from './components/dashboard-view';
 import { PaywallModal } from './components/paywall-modal';
 import { GlassCard } from './components/ui/glass-card';
 import { Button } from './components/ui/button';
+import { Sidebar } from './components/ui/sidebar';
 import { DatabaseService } from '@/app/lib/db/database-service';
 import { ArrowLeft, CheckCircle2, Loader2, Sparkles, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import { PlaceholderView } from './components/placeholder-view';
@@ -148,114 +149,113 @@ function MainContent() {
   };
 
   return (
-    <div className="pb-20 max-w-7xl mx-auto w-full">
-      {/* HEADER NAV (Contextual) */}
-      <div className="flex justify-end mb-6">
-        {state !== 'DASHBOARD' && state !== 'UPLOAD' && (
-          /* Breadcrumb-ish or Action Area */
-          <span />
-        )}
-      </div>
+    <div className="flex min-h-screen relative overflow-hidden">
+      {/* Sidebar - Persistent Navigation */}
+      <Sidebar />
 
-      {/* --- VIEWS --- */}
+      {/* Main Content Area */}
+      <main className="flex-1 p-6 md:p-12 overflow-y-auto relative z-10 text-slate-200">
+        <div className="max-w-7xl mx-auto space-y-12">
 
-      {/* 1. DASHBOARD */}
-      {state === 'DASHBOARD' && (
-        <DashboardView onOpenBill={loadBillFromDashboard} onNewscan={() => {
-          // Navigate via URL to keep sidebar in sync
-          window.history.pushState(null, '', '?view=upload');
-          setState('UPLOAD');
-        }} />
-      )}
-
-      {/* 2. UPLOAD & PROCESSING */}
-      {(state === 'UPLOAD' || state === 'PROCESSING') && (
-        <div className="max-w-xl mx-auto mt-8 animate-in slide-in-from-bottom-4 duration-500">
-          {state === 'UPLOAD' && (
-            <div className="text-center mb-10 space-y-2">
-              <h2 className="text-3xl font-bold text-zinc-900 tracking-tight">Upload Medical Bill</h2>
-              <p className="text-zinc-500">AI-powered error detection and savings analysis.</p>
-            </div>
+          {/* 1. DASHBOARD */}
+          {state === 'DASHBOARD' && (
+            <DashboardView onOpenBill={loadBillFromDashboard} onNewscan={() => {
+              // Navigate via URL to keep sidebar in sync
+              window.history.pushState(null, '', '?view=upload');
+              setState('UPLOAD');
+            }} />
           )}
 
-          <GlassCard className="p-8 shadow-2xl shadow-blue-900/5 ring-1 ring-zinc-200/50">
-            {state === 'PROCESSING' ? (
-              <div className="py-12 text-center space-y-4">
-                <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
-                <div>
-                  <p className="text-xl font-bold text-zinc-900">Analyzing Bill...</p>
-                  <p className="text-sm text-zinc-500 mt-1">Cross-referencing CPT codes with insurance policies.</p>
+          {/* 2. UPLOAD & PROCESSING */}
+          {(state === 'UPLOAD' || state === 'PROCESSING') && (
+            <div className="max-w-xl mx-auto mt-8 animate-in slide-in-from-bottom-4 duration-500">
+              {state === 'UPLOAD' && (
+                <div className="text-center mb-10 space-y-2">
+                  <h2 className="text-3xl font-bold text-white tracking-tight">Upload Medical Bill</h2>
+                  <p className="text-slate-400">AI-powered error detection and savings analysis.</p>
                 </div>
-              </div>
-            ) : (
-              <>
-                <FileUpload onFileSelect={handleFileUpload} isProcessing={isProcessing} />
-                <div className="mt-8 flex items-center justify-center gap-8 text-xs text-zinc-400">
-                  <div className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-zinc-300" /> <span>HIPAA Secure</span></div>
-                  <div className="flex items-center gap-1.5"><LayoutDashboard className="w-4 h-4 text-zinc-300" /> <span>AES-256 Encrypted</span></div>
-                </div>
-              </>
-            )}
-          </GlassCard>
-        </div>
-      )}
+              )}
 
-      {/* 3. PAYWALL */}
-      {state === 'PAYWALL' && issues.length > 0 && currentBill && (
-        <PaywallModal
-          issueCount={issues.length}
-          potentialSavings={issues.reduce((acc, i) => acc + (i.savingsPotential || 0), 0)}
-          onPay={handleUnlock}
-        />
-      )}
-
-      {/* 4. REVIEW & DISPUTE */}
-      {(state === 'REVIEW' || state === 'DISPUTE_READY') && currentBill && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={reset} className="gap-2 pl-0 hover:bg-transparent hover:text-blue-600">
-              <ArrowLeft className="w-4 h-4" /> Scanner
-            </Button>
-            <div className="text-sm font-medium px-3 py-1 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4" /> Audit Complete
-            </div>
-          </div>
-
-          <BillSummary bill={currentBill} />
-
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-zinc-900 flex items-center gap-2">
-              Issues Detected
-              <span className="bg-red-100 text-red-600 text-sm px-2 py-1 rounded-full font-extrabold">{issues.length}</span>
-            </h2>
-
-            {issues.length === 0 ? (
-              <GlassCard className="p-10 text-center text-zinc-500">
-                <CheckCircle2 className="w-12 h-12 mx-auto text-green-500 mb-4" />
-                <h3 className="text-lg font-medium text-zinc-900">No Obvious Errors Found</h3>
+              <GlassCard className="p-8 shadow-2xl shadow-blue-900/20 ring-1 ring-white/10">
+                {state === 'PROCESSING' ? (
+                  <div className="py-12 text-center space-y-4">
+                    <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto" />
+                    <div>
+                      <p className="text-xl font-bold text-white">Analyzing Bill...</p>
+                      <p className="text-sm text-slate-400 mt-1">Cross-referencing CPT codes with insurance policies.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <FileUpload onFileSelect={handleFileUpload} isProcessing={isProcessing} />
+                    <div className="mt-8 flex items-center justify-center gap-8 text-xs text-slate-500">
+                      <div className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-slate-600" /> <span>HIPAA Secure</span></div>
+                      <div className="flex items-center gap-1.5"><LayoutDashboard className="w-4 h-4 text-slate-600" /> <span>AES-256 Encrypted</span></div>
+                    </div>
+                  </>
+                )}
               </GlassCard>
-            ) : (
-              <div className="grid gap-4">
-                {issues.map((issue) => <IssueCard key={issue.id} issue={issue} />)}
-              </div>
-            )}
-          </div>
-
-          {issues.length > 0 && (
-            <DisputeActions onGenerate={handleGenerateDispute} isGenerating={false} />
+            </div>
           )}
 
-          <p className="text-xs text-center text-zinc-400 max-w-xl mx-auto mt-8 opacity-60 pb-8">
-            {MANDATORY_DISCLAIMER}
-          </p>
-        </div>
-      )}
+          {/* 3. PAYWALL */}
+          {state === 'PAYWALL' && issues.length > 0 && currentBill && (
+            <PaywallModal
+              issueCount={issues.length}
+              potentialSavings={issues.reduce((acc, i) => acc + (i.savingsPotential || 0), 0)}
+              onPay={handleUnlock}
+            />
+          )}
 
-      {/* 5. NEW PAGES */}
-      {state === 'PATIENTS' && <PatientsView />}
-      {state === 'REPORTS' && <ReportsView />}
-      {state === 'SETTINGS' && <SettingsView />}
-      {state === 'CLAIMS' && <ClaimsView />}
+          {/* 4. REVIEW & DISPUTE */}
+          {(state === 'REVIEW' || state === 'DISPUTE_READY') && currentBill && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" onClick={reset} className="gap-2 pl-0 hover:bg-transparent hover:text-blue-400 text-slate-400">
+                  <ArrowLeft className="w-4 h-4" /> Scanner
+                </Button>
+                <div className="text-sm font-medium px-3 py-1 bg-green-900/30 text-green-400 border border-green-500/20 rounded-full flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" /> Audit Complete
+                </div>
+              </div>
+
+              <BillSummary bill={currentBill} />
+
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  Issues Detected
+                  <span className="bg-red-500/10 text-red-400 text-sm px-2 py-1 rounded-full font-extrabold border border-red-500/20">{issues.length}</span>
+                </h2>
+
+                {issues.length === 0 ? (
+                  <GlassCard className="p-10 text-center text-slate-400">
+                    <CheckCircle2 className="w-12 h-12 mx-auto text-green-500 mb-4" />
+                    <h3 className="text-lg font-medium text-white">No Obvious Errors Found</h3>
+                  </GlassCard>
+                ) : (
+                  <div className="grid gap-4">
+                    {issues.map((issue) => <IssueCard key={issue.id} issue={issue} />)}
+                  </div>
+                )}
+              </div>
+
+              {issues.length > 0 && (
+                <DisputeActions onGenerate={handleGenerateDispute} isGenerating={false} />
+              )}
+
+              <p className="text-xs text-center text-slate-600 max-w-xl mx-auto mt-8 opacity-60 pb-8">
+                {MANDATORY_DISCLAIMER}
+              </p>
+            </div>
+          )}
+
+          {/* 5. NEW PAGES */}
+          {state === 'PATIENTS' && <PatientsView />}
+          {state === 'REPORTS' && <ReportsView />}
+          {state === 'SETTINGS' && <SettingsView />}
+          {state === 'CLAIMS' && <ClaimsView />}
+        </div>
+      </main>
     </div>
   );
 }

@@ -46,17 +46,17 @@ export function Sidebar() {
             )}
 
             <aside className={cn(
-                "fixed md:static inset-y-0 left-0 bg-white border-r border-zinc-200 transition-all duration-300 z-50 flex flex-col shadow-2xl md:shadow-none",
+                "fixed md:static inset-y-0 left-0 bg-slate-900/80 backdrop-blur-xl border-r border-slate-800 transition-all duration-300 z-50 flex flex-col shadow-2xl",
                 collapsed ? "w-20" : "w-64",
                 mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 {/* Brand */}
-                <div className="h-16 flex items-center justify-center border-b border-zinc-50 shrink-0">
-                    <div className="flex items-center gap-2 font-bold text-xl text-zinc-900">
-                        <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2 rounded-xl shadow-lg shadow-blue-500/30">
+                <div className="h-16 flex items-center justify-center border-b border-slate-800 shrink-0 bg-slate-900/50">
+                    <div className="flex items-center gap-2 font-bold text-xl text-white">
+                        <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2 rounded-xl shadow-lg shadow-blue-500/20 ring-1 ring-white/10">
                             <ShieldCheck className="w-5 h-5" />
                         </div>
-                        {!collapsed && <span className="tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent">BillRx</span>}
+                        {!collapsed && <span className="tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">BillRx</span>}
                     </div>
                 </div>
 
@@ -71,30 +71,30 @@ export function Sidebar() {
                                 className={cn(
                                     "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
                                     isActive
-                                        ? "bg-blue-50/50 text-blue-700 font-semibold shadow-sm ring-1 ring-blue-100"
-                                        : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
+                                        ? "bg-blue-600/10 text-blue-400 font-semibold shadow-sm ring-1 ring-blue-500/20"
+                                        : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
                                 )}
                             >
-                                <item.icon className={cn("w-5 h-5 shrink-0 transition-colors", isActive ? "text-blue-600" : "text-zinc-400 group-hover:text-zinc-600")} />
+                                <item.icon className={cn("w-5 h-5 shrink-0 transition-colors", isActive ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300")} />
                                 {!collapsed && (
                                     <span className="whitespace-nowrap font-medium text-sm">
                                         {item.label}
                                     </span>
                                 )}
-                                {isActive && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-600 rounded-l-full" />}
+                                {isActive && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-l-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />}
                             </button>
                         );
                     })}
                 </div>
 
                 {/* User */}
-                <div className="p-4 border-t border-zinc-50 bg-zinc-50/50">
+                <div className="p-4 border-t border-slate-800 bg-slate-900/50">
                     <div className={cn("flex items-center gap-3", collapsed ? "justify-center" : "")}>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 shrink-0 border-2 border-white shadow-sm" />
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 shrink-0 border border-white/20 shadow-inner" />
                         {!collapsed && (
                             <div className="overflow-hidden text-left">
-                                <p className="text-sm font-semibold text-zinc-900 truncate">Dr. Administrator</p>
-                                <p className="text-xs text-zinc-500 truncate">Pro License</p>
+                                <p className="text-sm font-semibold text-white truncate">Dr. Administrator</p>
+                                <p className="text-xs text-slate-400 truncate">Pro License</p>
                             </div>
                         )}
                     </div>
@@ -103,7 +103,7 @@ export function Sidebar() {
                 {/* Desktop Collapse Toggle */}
                 <button
                     onClick={() => setCollapsed(!collapsed)}
-                    className="absolute -right-3 top-20 bg-white border border-zinc-200 p-1.5 rounded-full shadow-md text-zinc-400 hover:text-blue-600 transition-all hidden md:flex hover:scale-110"
+                    className="absolute -right-3 top-20 bg-slate-800 border border-slate-700 p-1.5 rounded-full shadow-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all hidden md:flex hover:scale-110"
                 >
                     {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
                 </button>
