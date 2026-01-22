@@ -147,7 +147,7 @@ public class BorrowDAO {
     }
 
     // get overdue books
-    public List<BorrowRecord> getOverdueBooks(int memberId) {
+    public List<BorrowRecord> getOverdueBooks() {
         List<BorrowRecord> records = new ArrayList<>();
         String query = """
                 SELECT bb.*, b.title as book_title,
@@ -159,7 +159,6 @@ public class BorrowDAO {
                 ORDER BY bb.due_date
                 """;
         try (Connection connection = DatabaseConfig.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setInt(1, memberId);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 BorrowRecord record = extractBorrowRecordFromResultSet(resultSet);
