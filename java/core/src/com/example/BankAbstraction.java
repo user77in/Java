@@ -75,6 +75,6 @@ public class BankAbstraction {
         payPal.processPayment(7487855.656);
         System.out.println();
         bankTransfer.processPayment(2556666.55);
-        
+
     }
 }
