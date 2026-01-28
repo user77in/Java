@@ -4,6 +4,7 @@ import org.example.config.DatabaseConfig;
 import org.example.model.Room;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,6 +84,34 @@ public class RoomDAO {
             preparedStatement.setInt(1, id);
             return preparedStatement.executeUpdate() > 0;
         }
+    }
+
+    public List<Room> findAvailableRooms(LocalDate checkIn, LocalDate checkOut) throws Exception {
+        String query = """
+                Select *
+                from rooms
+                where id not in (
+                    select room_id
+                    from bookings
+                    where status = 'CONFIRMED'
+                        and not (
+                            ? <= check_in
+                            or
+                            ? >= check_out
+                        )
+                )
+                """;
+        List<Room> rooms = new ArrayList<>();
+        try (Connection connection = DatabaseConfig.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setDate(1, Date.valueOf(checkOut));
+            preparedStatement.setDate((2), Date.valueOf(checkIn));
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                rooms.add(mapRowToRoom(resultSet));
+            }
+        }
+        return rooms;
     }
 
 

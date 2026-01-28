@@ -2,41 +2,15 @@ package org.example.dao;
 
 import org.example.config.DatabaseConfig;
 import org.example.model.Booking;
-
-import javax.xml.crypto.Data;
-import java.awt.print.Book;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BookingDAO {
 
-    // create booking (transactional)
-    public int createBooking(Booking booking) throws Exception {
-        Connection connection = null;
-        try {
-            connection = DatabaseConfig.getConnection();
-            connection.setAutoCommit(false);
-            int bookingId = insertBooking(connection, booking);
-            RoomDAO roomDAO = new RoomDAO();
-            roomDAO.updateStatus(connection, booking.getRoomId(), "BOOKED");
-            connection.commit();
-            return bookingId;
-        } catch (Exception e) {
-            if (connection != null) {
-                connection.rollback();
-            }
-            throw new SQLException(e);
-        } finally {
-            if (connection != null) {
-                connection.close();
-            }
-        }
-
-    }
-
-    // helper method of create booking
-    private int insertBooking(Connection connection, Booking booking) throws SQLException {
+    // insert new booking
+    public int insert(Connection connection, Booking booking) throws SQLException {
         String query = "insert into bookings (guest_id,room_id,check_in,check_out,status) values(?,?,?,?,?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setInt(1, booking.getGuestId());
@@ -54,25 +28,12 @@ public class BookingDAO {
         throw new SQLException("Booking insertion failed....");
     }
 
-    public Booking findBookingById(int id) throws Exception {
-        String query = "select * form bookings where id = ?";
-        try (Connection connection = DatabaseConfig.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setInt(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                return mapRow(resultSet);
-            }
-            return null;
-        }
-    }
-
-
     // update booking status
     public void updateStatus(Connection connection, int bookingId, String status) throws Exception {
         String query = "update bookings set status = ? where id = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setInt(1, bookingId);
-            preparedStatement.setString(2, status);
+            preparedStatement.setString(1, status);
+            preparedStatement.setInt(2, bookingId);
             if (preparedStatement.executeUpdate() == 0) {
                 throw new SQLException("Booking not found...");
             }
@@ -92,29 +53,8 @@ public class BookingDAO {
         return bookings;
     }
 
-    // cancel booking (transactional)
-    public void cancelBooking(int bookingId) throws Exception {
-        Connection connection = null;
-        try {
-            connection = DatabaseConfig.getConnection();
-            connection.setAutoCommit(false);
-            Booking booking = findBookingById(bookingId);
-            if (booking == null) {
-                throw new SQLException("Booking not found");
-            }
-            updateStatus(connection, bookingId, "CANCELLED");
-            RoomDAO roomDAO = new RoomDAO();
-            roomDAO.updateStatus(connection, booking.getRoomId(), "AVAILABLE");
-            connection.commit();
-        } catch (Exception e) {
-            if (connection != null) connection.rollback();
-            throw new SQLException("Cancel booking failed" + e.getMessage());
-        } finally {
-            if (connection != null) connection.close();
-        }
-    }
     public Booking findBookingById(Connection connection, int id) throws Exception {
-        String query = "select * form bookings where id = ?";
+        String query = "select * from bookings where id = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setInt(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -123,6 +63,31 @@ public class BookingDAO {
             }
             return null;
         }
+    }
+
+    // check room availability
+    public boolean isRoomAvailable(Connection connection, int roomId, LocalDate checkIn, LocalDate checkOut) throws SQLException {
+        String query = """
+                select count(*)
+                from bookings
+                where room_id = ?
+                and status = 'CONFIRMED'
+                and not(
+                    ? <= check_in
+                    or
+                    ? >= check_out
+                )
+                """;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, roomId);
+            preparedStatement.setDate(2, Date.valueOf(checkOut));
+            preparedStatement.setDate(3, Date.valueOf(checkIn));
+            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet.next();
+            return resultSet.getInt(1) == 0;
+
+        }
+
     }
 
 

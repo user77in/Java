@@ -1,22 +1,14 @@
 package org.example;
 
-import org.example.config.DatabaseConfig;
-import org.example.dao.GuestDAO;
-import org.example.model.Guest;
 
-import java.sql.Connection;
+import org.example.dao.RoomDAO;
+
+import java.time.LocalDate;
 
 public class Main {
-    public static void main(String[] args) {
-        try{
-            Connection connection = DatabaseConfig.getConnection();
-            if(!connection.isClosed()){
-                System.out.println("Database connected successfully");
-                GuestDAO guestDAO = new GuestDAO();
-                guestDAO.deleteById(1);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+    public static void main(String[] args) throws Exception {
+
+        RoomDAO roomDAO = new RoomDAO();
+        System.out.println(roomDAO.findAvailableRooms(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 6)));
     }
 }
