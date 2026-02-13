@@ -203,7 +203,7 @@ public class ContactManagerGUI extends JFrame {
         panel.add(showAllButton);
 
         panel.add(new JLabel("Filter by Category: "));
-        String[] filterCategories = {"All", "Friends", "Family", "Work", "Together"};
+        String[] filterCategories = {"All", "Friends", "Family", "Work", "Other"};
         filterCategoryComboBox = new JComboBox<>(filterCategories);
         filterCategoryComboBox.addActionListener(e -> filterByCategory());
         panel.add(filterCategoryComboBox);
@@ -221,33 +221,34 @@ public class ContactManagerGUI extends JFrame {
         return panel;
     }
 
-    private void loadAllContacts(){
+    private void loadAllContacts() {
         tableModel.setRowCount(0); // clear table
         List<Contact> contacts = contactDAO.getAllContacts();
-        for(Contact contact: contacts){
+        for (Contact contact : contacts) {
             Object[] row = {
                     contact.getId(),
                     contact.getName(),
                     contact.getPhone(),
                     contact.getEmail(),
-                    contact.getAddress(),
+                    contact.getCategory()
             };
             tableModel.addRow(row);
         }
         updateContactCount();
     }
-    private void searchContacts(){
+
+    private void searchContacts() {
         String searchTerm = searchField.getText().trim();
-        if(searchTerm.isEmpty()){
-            JOptionPane.showMessageDialog(this, "Enter a search term","Search Error",JOptionPane.WARNING_MESSAGE);
+        if (searchTerm.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Enter a search term", "Search Error", JOptionPane.WARNING_MESSAGE);
             return;
         }
         tableModel.setRowCount(0);
         List<Contact> contacts = contactDAO.searchContactsByName(searchTerm);
-        if(contacts.isEmpty()){
+        if (contacts.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No contacts found matching " + searchTerm);
-        }else{
-            for(Contact contact: contacts){
+        } else {
+            for (Contact contact : contacts) {
                 Object[] row = {
                         contact.getId(),
                         contact.getName(),
@@ -260,6 +261,180 @@ public class ContactManagerGUI extends JFrame {
         }
     }
 
+    private void filterByCategory() {
+        String selectedCategory = (String) filterCategoryComboBox.getSelectedItem();
+        if (selectedCategory.equals("All")) {
+            loadAllContacts();
+            return;
+        }
+        tableModel.setRowCount(0);
+        List<Contact> contacts = contactDAO.searchContactsByCategory(selectedCategory);
+        for (Contact contact : contacts) {
+            Object[] row = {
+                    contact.getId(),
+                    contact.getName(),
+                    contact.getPhone(),
+                    contact.getEmail(),
+                    contact.getCategory()
+            };
+            tableModel.addRow(row);
+        }
+    }
+
+    // add contact
+    private void addContact() {
+        String name = nameField.getText().trim();
+        String phone = phoneField.getText().trim();
+        String email = emailField.getText().trim();
+        String address = addressField.getText().trim();
+        String category = (String) categoryComboBox.getSelectedItem();
+
+        if (name.isEmpty() || phone.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Name and Phone are required fields", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!phone.matches("\\d{10}")) {
+            JOptionPane.showMessageDialog(this,
+                    "Phone number must be 10 digits!",
+                    "Validation Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid email format!",
+                    "Validation Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        Contact contact = new Contact(name, phone, email, address, category);
+        boolean success = contactDAO.addContact(contact);
+        if (success) {
+            JOptionPane.showMessageDialog(this, "Contact Added successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+            clearForm();
+            loadAllContacts();
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to add contact", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // update contact
+    private void updateContact() {
+        if (selectedContactId == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a contact from the table to update", "Selection Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String name = nameField.getText().trim();
+        String phone = phoneField.getText().trim();
+        String email = emailField.getText().trim();
+        String address = addressField.getText().trim();
+        String category = (String) categoryComboBox.getSelectedItem();
+
+        if (name.isEmpty() || phone.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Name and Phone are required fields!",
+                    "Validation Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!phone.matches("\\d{10}")) {
+            JOptionPane.showMessageDialog(this,
+                    "Phone number must be 10 digits!",
+                    "Validation Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid email format!",
+                    "Validation Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        Contact contact = new Contact(selectedContactId, name, phone, email, address, category, null);
+        boolean success = contactDAO.updateContact(contact);
+        if (success) {
+            JOptionPane.showMessageDialog(this, "Contact updated successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+            clearForm();
+            loadAllContacts();
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to update contact!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+
+    }
+
+    // delete contact
+    private void deleteContact() {
+        if (selectedContactId == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a contact from the table to delete", "Selection Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this contact?", "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = contactDAO.deleteContact(selectedContactId);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Contact deleted successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+                clearForm();
+                loadAllContacts();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete contact!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // fill the form when the table row is clicked
+    private void fillFormFromSelectedRow() {
+        int selectedRow = contactTable.getSelectedRow();
+        if (selectedRow != -1) {
+            selectedContactId = (int) tableModel.getValueAt(selectedRow, 0);
+            nameField.setText((String) tableModel.getValueAt(selectedRow, 1));
+            phoneField.setText((String) tableModel.getValueAt(selectedRow, 2));
+            emailField.setText((String) tableModel.getValueAt(selectedRow, 3));
+
+            // get full contact for the address
+            List<Contact> allContacts = contactDAO.getAllContacts();
+            for (Contact contact : allContacts) {
+                if (contact.getId() == selectedContactId) {
+                    addressField.setText(contact.getAddress());
+                    categoryComboBox.setSelectedItem(contact.getCategory());
+                    break;
+                }
+            }
+        }
+    }
+
+    // clear Form
+    private void clearForm() {
+        nameField.setText("");
+        phoneField.setText("");
+        emailField.setText("");
+        addressField.setText("");
+        categoryComboBox.setSelectedIndex(0);
+        selectedContactId = -1;
+        contactTable.clearSelection();
+    }
+
+    // update contact count
+    private void updateContactCount() {
+        int count = contactDAO.getContactCount();
+        totalContactsLabel.setText("Total Contacts : " + count);
+    }
+
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Run on Event Dispatch Thread
+        SwingUtilities.invokeLater(() -> {
+            new ContactManagerGUI();
+        });
+    }
 
 }
 

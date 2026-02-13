@@ -9,7 +9,7 @@ public class Contact {
     private String category;
     private String createdDate;
 
-    public Contact(String name, String phone, String email, String address, String category, String createdDate) {
+    public Contact(String name, String phone, String email, String address, String category) {
         this.name = name;
         this.phone = phone;
         this.email = email;
