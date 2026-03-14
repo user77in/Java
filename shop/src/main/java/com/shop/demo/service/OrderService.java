@@ -30,7 +30,7 @@ public class OrderService {
             throw new IllegalArgumentException("Price must be greater than zero");
         }
         Product product = productService.reserveStock(request.productId(), request.quantity());
-        BigDecimal totalPrice = BigDecimal.valueOf(request.pricePerItem()).multiply(BigDecimal.valueOf(request.quantity()));
+        BigDecimal totalPrice = product.getPrice().multiply(BigDecimal.valueOf(request.quantity()));
         Order order = new Order(request.userId(), product.getName(), request.quantity(), totalPrice);
         Order saved = orderRepository.save(order);
         return OrderResponse.from(saved); // create order response dto from order entity
