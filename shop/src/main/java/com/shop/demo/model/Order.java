@@ -17,11 +17,15 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false)
     private String productName;
+
+    @Column(nullable = false)
+    private Long productId;
 
     @Column(nullable = false)
     private Integer quantity;
@@ -35,8 +39,9 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    public Order(Long userId, String productName, Integer quantity, BigDecimal totalPrice) {
-        this.userId = userId;
+    public Order(User user, Long productId, String productName, Integer quantity, BigDecimal totalPrice) {
+        this.user = user;
+        this.productId = productId;
         this.productName = productName;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
