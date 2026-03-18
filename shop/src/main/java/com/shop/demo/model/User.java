@@ -3,6 +3,7 @@ package com.shop.demo.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
 @Table(name = "users")
 @Data
 @NoArgsConstructor
+@ToString(exclude = "orders")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
