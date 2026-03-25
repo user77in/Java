@@ -2,10 +2,12 @@ package com.shop.demo.controller;
 
 import com.shop.demo.dto.CreateOrderRequest;
 import com.shop.demo.dto.OrderResponse;
+import com.shop.demo.model.User;
 import com.shop.demo.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,26 +16,28 @@ import java.util.List;
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
+
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderRequest request) {
-        OrderResponse response = orderService.createOrder(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderRequest request, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(orderService.createOrder(request,currentUser));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrder(id));
+    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(orderService.getOrder(id,currentUser));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<OrderResponse>> getOrdersByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
+    @GetMapping("/my-orders")
+    public ResponseEntity<List<OrderResponse>> getMyOrders(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(orderService.getMyOrders(currentUser));
     }
 
+    // Apna order cancel karo
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.cancelOrder(id));
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(orderService.cancelOrder(id,user));
     }
 }

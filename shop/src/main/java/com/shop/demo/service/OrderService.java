@@ -11,6 +11,7 @@ import com.shop.demo.model.User;
 import com.shop.demo.repository.OrderRepository;
 import com.shop.demo.repository.ProductRepository;
 import com.shop.demo.repository.UserRepository;
+import com.shop.demo.security.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,45 +22,58 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
+
     private final OrderRepository orderRepository;
     private final ProductService productService;
-    private final UserService userService;
-    private final UserRepository userRepository;
 
     @Transactional
-    public OrderResponse createOrder(CreateOrderRequest request) {
-
+    public OrderResponse createOrder(CreateOrderRequest request, User currentUser) {
         if (request.quantity() == null || request.quantity() <= 0) {
             throw new BadRequestException("Quantity must be greater than zero");
         }
-        User user = userRepository.findUserEntityById(request.userId());
+
         Product product = productService.reserveStock(request.productId(), request.quantity());
-        BigDecimal totalPrice = product.getPrice().multiply(BigDecimal.valueOf(request.quantity()));
-        Order order = new Order(user, product.getId(), product.getName(), request.quantity(), totalPrice);
-        Order saved = orderRepository.save(order);
-        return OrderResponse.from(saved); // create order response dto from order entity
+        var totalPrice = product.getPrice()
+                .multiply(BigDecimal.valueOf(request.quantity()));
+
+        Order order = new Order(currentUser, product.getId(),
+                product.getName(), request.quantity(), totalPrice);
+        return OrderResponse.from(orderRepository.save(order));
     }
 
-    public OrderResponse getOrder(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("order not found: " + id));
+    public OrderResponse getOrder(Long orderId, User currentUser) {
+        Order order = getOrderAndVerifyOwnership(orderId, currentUser.getId());
         return OrderResponse.from(order);
     }
 
-    public List<OrderResponse> getOrdersByUser(Long userId) {
-        userService.findUserEntityById(userId);
-        return orderRepository.findByUser_Id(userId).stream().map(OrderResponse::from).toList();
+    public List<OrderResponse> getMyOrders(User currentUser) {
+        return orderRepository.findByUser_Id(currentUser.getId())
+                .stream()
+                .map(OrderResponse::from)
+                .toList();
     }
 
     @Transactional
-    public OrderResponse cancelOrder(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("order not found: " + id));
+    public OrderResponse cancelOrder(Long orderId, User currentUser) {
+        Order order = getOrderAndVerifyOwnership(orderId, currentUser.getId());
+
         if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new BadRequestException("order is already cancelled");
+            throw new BadRequestException("Order is already cancelled");
         }
+
         productService.restoreStock(order.getProductId(), order.getQuantity());
-        order.setStatus(OrderStatus.CANCELLED); // no need to save again @Transactional tracks changes
+        order.setStatus(OrderStatus.CANCELLED);
         return OrderResponse.from(order);
     }
 
+    private Order getOrderAndVerifyOwnership(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
+        if (!order.getUser().getId().equals(userId)) {
+            throw new BadRequestException("You can only access your own orders");
+        }
+
+        return order;
+    }
 }

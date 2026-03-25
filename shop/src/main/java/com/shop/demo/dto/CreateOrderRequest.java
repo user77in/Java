@@ -2,5 +2,5 @@ package com.shop.demo.dto;
 
 import java.math.BigDecimal;
 
-public record CreateOrderRequest(Long userId, Long productId, Integer quantity) {
+public record CreateOrderRequest(Long productId, Integer quantity) {
 }
